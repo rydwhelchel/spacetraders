@@ -1,0 +1,20 @@
+# environment variables
+.env
+
+# just a scratch file I paste json into 
+scratch.json
+.idea
+
+# build dir
+tmp/
+
+# Mac thingy
+.DS_store
+*/.DS_store
+
+# old files which are no longer relevant
+old_view/
+
+# Sqlite db / persistent cache
+spacetrader.db
+*/spacetrader.db
