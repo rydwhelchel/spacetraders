@@ -30,8 +30,9 @@ type Model struct {
 	width  int
 	height int
 
-	menu      list.Model
-	fleetview *fleetview
+	menu       list.Model
+	fleetview  *fleetview
+	systemview *systemview
 
 	// Pages
 	page page
@@ -40,7 +41,8 @@ type Model struct {
 type menuOpt struct {
 	title       string
 	description string
-	action      tea.Cmd
+	initFunc    func(int, int)
+	cmd         tea.Cmd
 }
 
 func (mo menuOpt) FilterValue() string {
@@ -58,7 +60,8 @@ func (mo menuOpt) Description() string {
 func NewModel(traderService *api.TraderService) *Model {
 	return &Model{
 		traderService: traderService,
-		fleetview:     newFleetView(),
+		fleetview:     newFleetView(traderService),
+		systemview:    newSystemView(traderService),
 		page:          main,
 	}
 }
@@ -69,12 +72,13 @@ func (m *Model) initMenu() {
 		menuOpt{
 			title:       "Fleet",
 			description: "View ship fleet",
-			action:      viewFleetCmd,
+			initFunc:    m.fleetview.initFleetList,
+			cmd:         viewFleetCmd,
 		},
 		menuOpt{
 			title:       "Systems",
 			description: "View all systems",
-			action:      viewSystemsCmd,
+			cmd:         viewSystemsCmd,
 		},
 		// TODO: How to make this a tea.Cmd? (Make it accept an argument.. Maybe currying?)
 		// TODO: This command should take you to a system selection screen probably
@@ -106,16 +110,28 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		// Init lists with width/height
 		m.initMenu()
-		m.fleetview.initFleetList(m.width, m.height)
 	// TODO: Return early to prevent calling update functions of child pages; or maybe we only need to return early in children's Updates
-	//		 think it only needs to happen in children
+	// NOTE: think it only needs to happen in children
 
 	case tea.KeyMsg:
 		switch msg.String() {
 		// TODO: Prob not necessary, think it's handled already
 		case "ctrl+c", "q":
 			return m, tea.Quit
+		case tea.KeyBackspace.String(): // Go back to main menu TODO: Add helper text for bksp
+			m.page = main
+			return m, tea.ClearScreen
+		case tea.KeyEnter.String(): // Choose a menu option and return its command
+			mo := m.menu.SelectedItem().(menuOpt)
+			mo.initFunc(m.width, m.height)
+			return m, mo.cmd
 		}
+
+	case viewFleetMsg:
+		m.page = fleet
+
+	case viewSystemsMsg:
+		m.page = systems
 	}
 
 	switch m.page {
@@ -123,6 +139,14 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case main:
 		menu, cmd := m.menu.Update(msg)
 		m.menu = menu
+		return m, cmd
+	case fleet:
+		fv, cmd := m.fleetview.Update(msg)
+		m.fleetview = fv.(*fleetview)
+		return m, cmd
+	case systems:
+		sv, cmd := m.systemview.Update(msg)
+		m.systemview = sv.(*systemview)
 		return m, cmd
 	}
 	return m, nil
@@ -133,6 +157,10 @@ func (m *Model) View() string {
 	switch m.page {
 	case main:
 		screen += m.menu.View()
+	case fleet:
+		screen += m.fleetview.View()
+	case systems:
+		screen += m.systemview.View()
 	}
 
 	return screen

@@ -14,6 +14,8 @@ import (
 	"github.com/rydwhelchel/spacetraders/view"
 )
 
+// TODO: Test "Wish" so that we can deploy this and remote in
+
 const spaceTraderDBFile = "spacetrader.db"
 
 func main() {

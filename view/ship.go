@@ -14,16 +14,23 @@ type shipview struct {
 	traderService *api.TraderService
 }
 
+func newShipView(ts *api.TraderService, oaShip openapi.Ship) *shipview {
+	return &shipview{
+		ship:          ship{oaShip},
+		traderService: ts,
+	}
+}
+
 type ship struct {
 	openapi.Ship
 }
 
-func (s *ship) Title() string {
+func (s ship) Title() string {
 	return s.Symbol + " " + string(s.Registration.Role)
 }
 
 // Description taken from oldview for now
-func (s *ship) Description() string {
+func (s ship) Description() string {
 	shipString := fmt.Sprintf("Ship %v", s.Registration.GetName())
 	// Ship details
 	shipString += fmt.Sprintf(" ~ %v ~ F%v/%v", s.Registration.Role, s.Fuel.Current, s.Frame.FuelCapacity)
@@ -35,7 +42,7 @@ func (s *ship) Description() string {
 }
 
 // FilterValue allows you to filter on ship type for now
-func (s *ship) FilterValue() string {
+func (s ship) FilterValue() string {
 	return string(s.Registration.Role)
 }
 

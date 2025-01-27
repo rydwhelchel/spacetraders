@@ -55,7 +55,7 @@ I.E. I can get ship data by requesting ship data, but I also get ship data by se
 type TraderData struct {
 	// TODO: Consider expiration times
 	Agent   *openapi.Agent          `json:"agent"`
-	Fleet   map[string]openapi.Ship `json:"fleet"` // Map of ShipSymbol -> Ship
+	Fleet   map[string]openapi.Ship `json:"fleet"` // Map of ShipSymbol -> Ship, makes it easier to update data regarding a single ship
 	Systems []openapi.System        `json:"systems"`
 }
 
@@ -123,16 +123,29 @@ func (ts *TraderService) RetrieveData() {
 }
 
 // TODO: Since we're limited to 2 requests per second, we should implement a priority queue system for requests
+// TODO: Figure out a better way to handle errors (displaying errors on screen instead of bustin it all down)
 
 // GetAgentData panics if an error is encountered
 func (ts *TraderService) GetAgentData() openapi.Agent {
 	a, _, err := ts.apiClient.AgentsAPI.GetMyAgent(ts.ctx).Execute()
 	if err != nil {
-		// TODO: Figure out a better way to handle this
 		log.Panicf("failed to get agent - %v", err.Error())
 	}
 
 	ts.Data.Agent = &a.Data
 
 	return a.Data
+}
+
+func (ts *TraderService) GetFleetData() map[string]openapi.Ship {
+	ships, _, err := ts.apiClient.FleetAPI.GetMyShips(ts.ctx).Execute()
+	if err != nil {
+		log.Panicf("failed to get fleet data - %v", err.Error())
+	}
+
+	for _, ship := range ships.Data {
+		ts.Data.Fleet[ship.Symbol] = ship
+	}
+
+	return ts.Data.Fleet
 }
