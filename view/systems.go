@@ -13,6 +13,11 @@ func newSystemView(ts *api.TraderService) *systemview {
 	return &systemview{ts}
 }
 
+func (sv *systemview) initSystems(width, height int) {
+
+	// TODO: Add list initialization
+}
+
 func (sv *systemview) Init() tea.Cmd {
 	return nil
 }

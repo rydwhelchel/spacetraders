@@ -78,11 +78,13 @@ func (m *Model) initMenu() {
 		menuOpt{
 			title:       "Systems",
 			description: "View all systems",
+			initFunc:    m.systemview.initSystems,
 			cmd:         viewSystemsCmd,
 		},
 		// TODO: How to make this a tea.Cmd? (Make it accept an argument.. Maybe currying?)
 		// TODO: This command should take you to a system selection screen probably
 		// TODO: We should have another option on ship menu which takes systemSymbol as an argument at menu creation
+		// NOTE: I shouldn't NEED arguments here, when I get the message I can just check what ship/system is currently selected
 		// 	{
 		// 		title:       "Waypoints",
 		// 		description: "View waypoints in given system TBD",
@@ -118,10 +120,14 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// TODO: Prob not necessary, think it's handled already
 		case "ctrl+c", "q":
 			return m, tea.Quit
-		case tea.KeyBackspace.String(): // Go back to main menu TODO: Add helper text for bksp
+		case tea.KeyBackspace.String(): // Go back to main menu
+			// TODO: Add helper text for bksp
+			// TODO: Add functionality to go back 1 page instead of all the way to main -- will be relevant with ship actions
 			m.page = main
 			return m, tea.ClearScreen
 		case tea.KeyEnter.String(): // Choose a menu option and return its command
+			// TODO: Does it make sense to instead just swap state here?
+			// TODO: Swapping on keyMsg might belong in the state switch, does enter
 			mo := m.menu.SelectedItem().(menuOpt)
 			mo.initFunc(m.width, m.height)
 			return m, mo.cmd

@@ -51,7 +51,7 @@ func main() {
 
 	tui := view.NewModel(traderService)
 
-	program := tea.NewProgram(tui)
+	program := tea.NewProgram(tui, tea.WithAltScreen())
 
 	// For now ignoring the returned model
 	_, err = program.Run()
